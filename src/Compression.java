@@ -14,7 +14,7 @@ public class Compression {
 		int sum = 0;
 		int count = 0;
 		byte sigBytes = 0;
-		String fileIn = "Data_GPDF_0.01";
+		String fileIn = "Data_GPDF_0.01"; // file used for testing
 		String dat = ".dat";
 		String b = "_b";
 		
@@ -22,9 +22,9 @@ public class Compression {
 			
 			File inFile = new File(fileIn + ".txt");
 			Scanner scan = new Scanner(inFile);
-            OutputStream outFile = new FileOutputStream(fileIn + fileNum + b + dat);
+			OutputStream outFile = new FileOutputStream(fileIn + fileNum + b + dat);
 			
-            int num = 0;
+			int num = 0;
 			while(scan.hasNextInt()) { // !eof
 				
 				num = scan.nextInt();
@@ -50,7 +50,7 @@ public class Compression {
 				
 				if(numBytes >= 65536) { // 64k bytes per file
 					fileNum++;
-		            outFile = new FileOutputStream(fileIn + fileNum + b);			
+					outFile = new FileOutputStream(fileIn + fileNum + b);			
 					numBytes = 0;
 				}
 				
@@ -60,7 +60,6 @@ public class Compression {
 				byte first = (byte) ((num & 0xff000000) >> 24);
 				
 				outFile.write(sigBytes); // write the indicator byte
-										 // how do we use 2 bits instead?
 				
 				if(first > 0)
 					outFile.write(first);
@@ -76,7 +75,7 @@ public class Compression {
 			}
 			
 			double compression_ratio = (count*32)/sum; // where count = number of 32 bit ints in a file
-													   // and sum = total bits after compression
+								   // and sum = total bits after compression
 			
 			System.out.println("Compression ratio: " + compression_ratio);
 			outFile.close();
