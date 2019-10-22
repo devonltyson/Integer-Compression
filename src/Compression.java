@@ -8,23 +8,29 @@ import java.util.Scanner;
 public class Compression {
 	
 	public static int sum = 0;
-	public static float numBytes = 0;
+	public static double numBytes = 0.0;
 	public static byte sigBytes;
 	public static OutputStream outFile;
+	public static File gapsFile;
 	public static int fileNum = 1;
 	public static int count = 0;
 	public static byte indicator = 0;
 	
-	public static String fileIn = "Data_GPDF_0.01"; // file used for testing
+	public static String fileIn = "india"; // file used for testing
 	public static String dat = ".dat";
+	public static String txt = ".txt";
 	public static String b = "_b";
+	public static String gaps = "_gaps";
 	
 	public static void main(String[] args) {
 		
 		try {
 			
-			File inFile = new File(fileIn + ".txt");
-			Scanner scan = new Scanner(inFile);
+			File inFile = new File(fileIn + txt);
+			findGaps(inFile);
+			File gapsFile = new File(fileIn + gaps + txt);
+
+			Scanner scan = new Scanner(gapsFile);
 			outFile = new FileOutputStream(fileIn + fileNum + b + dat);
 			
 			int num = 0;
@@ -56,10 +62,16 @@ public class Compression {
 			//	numBytes += 1;
 				indicator = 0;
 			}
-				
-			double compression_ratio = (count*32)/sum; // where count = number of 32 bit ints in a file
-													   // and sum = total bits after compression
-			System.out.println("Compression ratio: " + compression_ratio);
+
+			double compression_ratio = 0.0;
+			if(sum > 0) {
+				compression_ratio = ((double)count*32)/(double)sum; // where count = number of 32 bit ints in a file
+													// and sum = total bits after compression
+			}
+
+			System.out.print("Compression ratio: ");
+			System.out.printf("%.2f", compression_ratio);
+			System.out.println();
 			outFile.close();
 			scan.close();
 			
@@ -71,26 +83,27 @@ public class Compression {
 	
 	public static void writeNum(int num) throws IOException {
 		count++;
+		numBytes+=4; // 4 bytes per original integer
 				
 		if(num < 256) {
 			sum += 10;
-			sigBytes = 1;
-			numBytes+=(10/8);
+			sigBytes = 0; // 1 sigByte
+			//numBytes+=(10.0/8.0);
 					
 		} else if(num >= 256 && num <= (Math.pow(2, 16)-1)) {
-			sigBytes = 2;
+			sigBytes = 1; // 2 sigBytes
 			sum += 18;
-			numBytes+=(18/8);
+			//numBytes+=(18.0/8.0);
 					
 		} else if(num >= (Math.pow(2, 16)) && num <= (Math.pow(2, 24)-1) ) {
-			sigBytes = 3;
+			sigBytes = 2; // 3 sigBytes
 			sum += 26;
-			numBytes+=(26/8);
+			//numBytes+=(26.0/8.0);
 					
 		} else {
-			sigBytes = 4;
+			sigBytes = 3; // 4 sigBytes
 			sum += 34;
-			numBytes+=(34/8);
+			//numBytes+=(34.0/8.0);
 		}
 				
 		if(numBytes >= 65536) { // 64k bytes per file
@@ -119,5 +132,27 @@ public class Compression {
 		
 		//testing
 		//System.out.println("sig: " + sigBytes);
+	}
+
+	public static void findGaps(File inFile) throws IOException {
+
+		PrintWriter writer = new PrintWriter(new FileWriter(fileIn + gaps + txt));
+
+		Scanner scan = new Scanner(inFile);
+		int firstNum = 0;
+		int temp = 0;
+
+		// write the first number for reference
+		if(scan.hasNextInt()) {
+			firstNum = scan.nextInt();
+			writer.println(firstNum);
+		}
+
+		while(scan.hasNextInt()) {
+			temp = scan.nextInt();
+			int gapNum = temp - firstNum;
+			writer.println(gapNum);
+			firstNum = temp;
+		}
 	}
 }
